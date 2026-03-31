@@ -5,11 +5,11 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import com.example.umc10th.databinding.FragmentPurchaseShoesBinding
+import com.example.umc10th.databinding.FragmentPurchaseSalesBinding
 
-class PurchaseShoesFragment : Fragment() {
+class PurchaseSalesFragment : Fragment() {
 
-    private var _binding: FragmentPurchaseShoesBinding? = null
+    private var _binding: FragmentPurchaseSalesBinding? = null
     private val binding get() = _binding!!
 
     override fun onCreateView(
@@ -17,7 +17,7 @@ class PurchaseShoesFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        _binding = FragmentPurchaseShoesBinding.inflate(inflater, container, false)
+        _binding = FragmentPurchaseSalesBinding.inflate(inflater, container, false)
         return binding.root
     }
 

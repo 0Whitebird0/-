@@ -39,7 +39,7 @@ class PurchaseFragment : Fragment() {
             tab.text = when (position) {
                 0 -> "전체"
                 1 -> "Tops & T-Shirts"
-                else -> "Shoes"
+                else -> "Sales"
             }
         }.attach()
 

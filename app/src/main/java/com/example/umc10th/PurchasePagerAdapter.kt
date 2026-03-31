@@ -11,7 +11,7 @@ class PurchasePagerAdapter(fragment: Fragment) : FragmentStateAdapter(fragment) 
         return when (position) {
             0 -> PurchaseAllFragment()
             1 -> PurchaseTopsFragment()
-            else -> PurchaseShoesFragment()
+            else -> PurchaseSalesFragment()
         }
     }
 }

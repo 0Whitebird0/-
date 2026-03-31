@@ -5,14 +5,18 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import androidx.navigation.fragment.findNavController
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import com.example.umc10th.databinding.FragmentWishlistBinding
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 
 class WishlistFragment : Fragment() {
 
     private var _binding: FragmentWishlistBinding? = null
     private val binding get() = _binding!!
+
+    private lateinit var wishListAdapter: PurchaseProductAdapter
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -26,149 +30,33 @@ class WishlistFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setupRecyclerView()
+        observeWishListProducts()
     }
 
+    private fun observeWishListProducts(){
+        viewLifecycleOwner.lifecycleScope.launch{
+            getPurchaseProducts(requireContext()).collect{ purchaseProducts ->
+                val new_wishListProducts = purchaseProducts.filter{ it.isWishlisted}
+                wishListAdapter.submitList(new_wishListProducts)
+            }
+        }
+    }
     private fun setupRecyclerView() {
-        val products = listOf(
-            WishlistProduct(
-                R.drawable.socks1,
-                "Nike Everyday Plus Cushioned",
-                "Training Ankle Socks (6 Pairs)",
-                "5 Colours",
-                "US\$10"
-            ),
-            WishlistProduct(
-                R.drawable.socks2,
-                "Nike Elite Crew",
-                "Basketball Socks",
-                "7 Colours",
-                "US\$16"
-            ),
-            WishlistProduct(
-                R.drawable.socks1,
-                "Nike Everyday Plus Cushioned",
-                "Training Ankle Socks (6 Pairs)",
-                "5 Colours",
-                "US\$10"
-            ),
-            WishlistProduct(
-                R.drawable.socks2,
-                "Nike Elite Crew",
-                "Basketball Socks",
-                "7 Colours",
-                "US\$16"
-            ),
-            WishlistProduct(
-                R.drawable.socks1,
-                "Nike Everyday Plus Cushioned",
-                "Training Ankle Socks (6 Pairs)",
-                "5 Colours",
-                "US\$10"
-            ),
-            WishlistProduct(
-                R.drawable.socks2,
-                "Nike Elite Crew",
-                "Basketball Socks",
-                "7 Colours",
-                "US\$16"
-            ),
-            WishlistProduct(
-                R.drawable.socks1,
-                "Nike Everyday Plus Cushioned",
-                "Training Ankle Socks (6 Pairs)",
-                "5 Colours",
-                "US\$10"
-            ),
-            WishlistProduct(
-                R.drawable.socks2,
-                "Nike Elite Crew",
-                "Basketball Socks",
-                "7 Colours",
-                "US\$16"
-            ),
-            WishlistProduct(
-                R.drawable.socks1,
-                "Nike Everyday Plus Cushioned",
-                "Training Ankle Socks (6 Pairs)",
-                "5 Colours",
-                "US\$10"
-            ),
-            WishlistProduct(
-                R.drawable.socks2,
-                "Nike Elite Crew",
-                "Basketball Socks",
-                "7 Colours",
-                "US\$16"
-            ),
-            WishlistProduct(
-                R.drawable.socks1,
-                "Nike Everyday Plus Cushioned",
-                "Training Ankle Socks (6 Pairs)",
-                "5 Colours",
-                "US\$10"
-            ),
-            WishlistProduct(
-                R.drawable.socks2,
-                "Nike Elite Crew",
-                "Basketball Socks",
-                "7 Colours",
-                "US\$16"
-            ),
-            WishlistProduct(
-                R.drawable.socks1,
-                "Nike Everyday Plus Cushioned",
-                "Training Ankle Socks (6 Pairs)",
-                "5 Colours",
-                "US\$10"
-            ),
-            WishlistProduct(
-                R.drawable.socks2,
-                "Nike Elite Crew",
-                "Basketball Socks",
-                "7 Colours",
-                "US\$16"
-            ),
-            WishlistProduct(
-                R.drawable.socks1,
-                "Nike Everyday Plus Cushioned",
-                "Training Ankle Socks (6 Pairs)",
-                "5 Colours",
-                "US\$10"
-            ),
-            WishlistProduct(
-                R.drawable.socks2,
-                "Nike Elite Crew",
-                "Basketball Socks",
-                "7 Colours",
-                "US\$16"
-            ),
-            WishlistProduct(
-                R.drawable.socks1,
-                "Nike Everyday Plus Cushioned",
-                "Training Ankle Socks (6 Pairs)",
-                "5 Colours",
-                "US\$10"
-            ),
-            WishlistProduct(
-                R.drawable.socks2,
-                "Nike Elite Crew",
-                "Basketball Socks",
-                "7 Colours",
-                "US\$16"
-            )
-        )
+        wishListAdapter = PurchaseProductAdapter(emptyList()) { clickedItem ->
+            viewLifecycleOwner.lifecycleScope.launch {
+                val updatedProducts = getPurchaseProducts(requireContext()).first().map { product ->
+                    if (product.id == clickedItem.id) {
+                        product.copy(isWishlisted = !product.isWishlisted)
+                    } else {
+                        product
+                    }
+                }
+                savePurchaseProducts(requireContext(), updatedProducts)
+            }
+        }
 
         binding.wishlistRecyclerView.layoutManager = GridLayoutManager(requireContext(), 2)
-        binding.wishlistRecyclerView.adapter = WishlistProductAdapter(products) { item ->
-            val action = WishlistFragmentDirections.actionMenuHeartStraightToMenuListMagnifyingGlass(
-                fromCart = false,
-                title = item.title,
-                imageResId = item.imageResId,
-                description = item.description,
-                price = item.price
-            )
-            findNavController().navigate(action)
-        }
+        binding.wishlistRecyclerView.adapter = wishListAdapter
     }
 
     override fun onDestroyView() {

@@ -7,7 +7,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.umc10th.databinding.ItemPurchaseProductBinding
 
 class PurchaseProductAdapter(
-    private val items: List<PurchaseProduct>
+    private var items: List<PurchaseProduct>,
+    private val onWishListClick: (PurchaseProduct) -> Unit
 ) : RecyclerView.Adapter<PurchaseProductAdapter.PurchaseProductViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PurchaseProductViewHolder {
@@ -25,6 +26,10 @@ class PurchaseProductAdapter(
 
     override fun getItemCount(): Int = items.size
 
+    fun submitList(newItems: List<PurchaseProduct>){
+        items = newItems
+        notifyDataSetChanged()
+    }
     inner class PurchaseProductViewHolder(
         private val binding: ItemPurchaseProductBinding
     ) : RecyclerView.ViewHolder(binding.root) {
@@ -38,8 +43,8 @@ class PurchaseProductAdapter(
             updateWishlistIcon(item.isWishlisted)
 
             binding.wishlistButton.setOnClickListener {
-                item.isWishlisted = !item.isWishlisted
-                updateWishlistIcon(item.isWishlisted)
+                onWishListClick(item)
+
             }
         }
 

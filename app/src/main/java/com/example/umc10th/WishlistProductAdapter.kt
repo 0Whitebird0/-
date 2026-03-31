@@ -6,8 +6,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.umc10th.databinding.ItemWishlistProductBinding
 
 class WishlistProductAdapter(
-    private val items: List<WishlistProduct>,
-    private val onItemClick: (WishlistProduct) -> Unit
+    private var items: List<PurchaseProduct>,
+    private val onItemClick: (PurchaseProduct) -> Unit
 ) : RecyclerView.Adapter<WishlistProductAdapter.WishlistProductViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): WishlistProductViewHolder {
@@ -25,11 +25,16 @@ class WishlistProductAdapter(
 
     override fun getItemCount(): Int = items.size
 
+    fun submitList(newItems: List<PurchaseProduct>){
+        items = newItems
+        notifyDataSetChanged()
+    }
+
     class WishlistProductViewHolder(
         private val binding: ItemWishlistProductBinding
     ) : RecyclerView.ViewHolder(binding.root) {
 
-        fun bind(item: WishlistProduct) {
+        fun bind(item: PurchaseProduct) {
             binding.productImage.setImageResource(item.imageResId)
             binding.productTitle.text = item.title
             binding.productDescription.text = item.description

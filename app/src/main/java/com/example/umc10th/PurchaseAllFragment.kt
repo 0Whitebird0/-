@@ -5,14 +5,19 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import com.example.umc10th.databinding.FragmentPurchaseAllBinding
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 
 class PurchaseAllFragment : Fragment() {
 
     private var _binding: FragmentPurchaseAllBinding? = null
     private val binding get() = _binding!!
 
+
+    private lateinit var purchaseProductAdapter: PurchaseProductAdapter
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -25,39 +30,33 @@ class PurchaseAllFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setupRecyclerView()
+        observePurchaseProducts()
+
     }
 
+    private fun observePurchaseProducts(){
+        viewLifecycleOwner.lifecycleScope.launch{
+            initializePurchaseProducts(requireContext())
+            getPurchaseProducts(requireContext()).collect { purchaseProducts ->
+                purchaseProductAdapter.submitList(purchaseProducts)
+            }
+        }
+    }
     private fun setupRecyclerView() {
-        val products = listOf(
-            PurchaseProduct(R.drawable.socks1, false, "Nike Everyday Plus Cushioned", "Training Ankle Socks (6 Pairs)", "5 Colours", "US\$10"),
-            PurchaseProduct(R.drawable.socks2, false, "Nike Elite Crew", "Basketball Socks", "7 Colours","US\$16"),
-            PurchaseProduct(R.drawable.shoes1, true,"Nike Air Force 1 '07", "Women's Shoes", "5 Colours", "US\$115"),
-            PurchaseProduct(R.drawable.shoes2, true, "Jordan ENike Air Force 1 '07ssentials", "Men's Shoes", "2 Colours","US\$115"),
-            PurchaseProduct(R.drawable.socks1, false, "Nike Everyday Plus Cushioned", "Training Ankle Socks (6 Pairs)", "5 Colours", "US\$10"),
-            PurchaseProduct(R.drawable.socks2, false, "Nike Elite Crew", "Basketball Socks", "7 Colours","US\$16"),
-            PurchaseProduct(R.drawable.shoes1, true,"Nike Air Force 1 '07", "Women's Shoes", "5 Colours", "US\$115"),
-            PurchaseProduct(R.drawable.shoes2, true, "Jordan ENike Air Force 1 '07ssentials", "Men's Shoes", "2 Colours","US\$115"),
-            PurchaseProduct(R.drawable.socks1, false, "Nike Everyday Plus Cushioned", "Training Ankle Socks (6 Pairs)", "5 Colours", "US\$10"),
-            PurchaseProduct(R.drawable.socks2, false, "Nike Elite Crew", "Basketball Socks", "7 Colours","US\$16"),
-            PurchaseProduct(R.drawable.shoes1, true,"Nike Air Force 1 '07", "Women's Shoes", "5 Colours", "US\$115"),
-            PurchaseProduct(R.drawable.shoes2, true, "Jordan ENike Air Force 1 '07ssentials", "Men's Shoes", "2 Colours","US\$115"),
-            PurchaseProduct(R.drawable.socks1, false, "Nike Everyday Plus Cushioned", "Training Ankle Socks (6 Pairs)", "5 Colours", "US\$10"),
-            PurchaseProduct(R.drawable.socks2, false, "Nike Elite Crew", "Basketball Socks", "7 Colours","US\$16"),
-            PurchaseProduct(R.drawable.shoes1, true,"Nike Air Force 1 '07", "Women's Shoes", "5 Colours", "US\$115"),
-            PurchaseProduct(R.drawable.shoes2, true, "Jordan ENike Air Force 1 '07ssentials", "Men's Shoes", "2 Colours","US\$115"),
-            PurchaseProduct(R.drawable.socks1, false, "Nike Everyday Plus Cushioned", "Training Ankle Socks (6 Pairs)", "5 Colours", "US\$10"),
-            PurchaseProduct(R.drawable.socks2, false, "Nike Elite Crew", "Basketball Socks", "7 Colours","US\$16"),
-            PurchaseProduct(R.drawable.shoes1, true,"Nike Air Force 1 '07", "Women's Shoes", "5 Colours", "US\$115"),
-            PurchaseProduct(R.drawable.shoes2, true, "Jordan ENike Air Force 1 '07ssentials", "Men's Shoes", "2 Colours","US\$115"),
-            PurchaseProduct(R.drawable.socks1, false, "Nike Everyday Plus Cushioned", "Training Ankle Socks (6 Pairs)", "5 Colours", "US\$10"),
-            PurchaseProduct(R.drawable.socks2, false, "Nike Elite Crew", "Basketball Socks", "7 Colours","US\$16"),
-            PurchaseProduct(R.drawable.shoes1, true,"Nike Air Force 1 '07", "Women's Shoes", "5 Colours", "US\$115"),
-            PurchaseProduct(R.drawable.shoes2, true, "Jordan ENike Air Force 1 '07ssentials", "Men's Shoes", "2 Colours","US\$115"),
-
-            )
-
+        purchaseProductAdapter = PurchaseProductAdapter(emptyList()) { clickedItem ->
+            viewLifecycleOwner.lifecycleScope.launch {
+                val updatedProducts = getPurchaseProducts(requireContext()).first().map { product ->
+                    if (product.id == clickedItem.id) {
+                        product.copy(isWishlisted = !product.isWishlisted)
+                    } else {
+                        product
+                    }
+                }
+                savePurchaseProducts(requireContext(), updatedProducts)
+            }
+        }
         binding.purchaseAllRecyclerView.layoutManager = GridLayoutManager(requireContext(), 2)
-        binding.purchaseAllRecyclerView.adapter = PurchaseProductAdapter(products)
+        binding.purchaseAllRecyclerView.adapter = purchaseProductAdapter
     }
 
     override fun onDestroyView() {

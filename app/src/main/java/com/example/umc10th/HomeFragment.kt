@@ -1,19 +1,24 @@
 package com.example.umc10th
 
+import android.content.Context
 import android.os.Bundle
 import android.os.SystemClock
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import androidx.navigation.navOptions
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.umc10th.databinding.FragmentHomeBinding
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 class HomeFragment : Fragment() {
 
@@ -21,6 +26,8 @@ class HomeFragment : Fragment() {
     private val binding get() = _binding!!
     private val args: HomeFragmentArgs by navArgs()
     private var lastBackPressedAt = 0L
+
+    private lateinit var productAdapter: ProductAdapter
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -38,6 +45,7 @@ class HomeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setupProductRecyclerView()
+        observeProducts()
         requireActivity().onBackPressedDispatcher.addCallback(
             viewLifecycleOwner,
             object : OnBackPressedCallback(true) {
@@ -58,36 +66,29 @@ class HomeFragment : Fragment() {
         )
     }
 
+
+    private fun observeProducts() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            Log.d(TAG, "observeProducts() start")
+            showLoading()
+
+            delay(1500)
+            Log.d(TAG, "delay finished")
+            initializeProducts(requireContext())
+            getProducts(requireContext()).collect { products ->
+                Log.d(TAG, "collect products size=${products.size}")
+                productAdapter.submitList(products)
+            }
+        }
+    }
+
+    private fun showLoading() {
+        Log.d(TAG, "showLoading()")
+        productAdapter.showLoading()
+    }
     private fun setupProductRecyclerView() {
-        val products = listOf(
-            Product(R.drawable.shoes1, "Air Jordan XXXVI", "Men's Shoes", "US\$185"),
-            Product(R.drawable.shoes2, "Nike Air Force 1 '07", "Women's Shoes", "US\$115"),
-            Product(R.drawable.shoes1, "Air Jordan XXXVI", "Men's Shoes", "US\$185"),
-            Product(R.drawable.shoes2, "Nike Air Force 1 '07", "Women's Shoes", "US\$115"),
-            Product(R.drawable.shoes1, "Air Jordan XXXVI", "Men's Shoes", "US\$185"),
-            Product(R.drawable.shoes2, "Nike Air Force 1 '07", "Women's Shoes", "US\$115"),
-            Product(R.drawable.shoes1, "Air Jordan XXXVI", "Men's Shoes", "US\$185"),
-            Product(R.drawable.shoes2, "Nike Air Force 1 '07", "Women's Shoes", "US\$115"),
-            Product(R.drawable.shoes1, "Air Jordan XXXVI", "Men's Shoes", "US\$185"),
-            Product(R.drawable.shoes2, "Nike Air Force 1 '07", "Women's Shoes", "US\$115"),
-            Product(R.drawable.shoes1, "Air Jordan XXXVI", "Men's Shoes", "US\$185"),
-            Product(R.drawable.shoes2, "Nike Air Force 1 '07", "Women's Shoes", "US\$115"),
-            Product(R.drawable.shoes1, "Air Jordan XXXVI", "Men's Shoes", "US\$185"),
-            Product(R.drawable.shoes2, "Nike Air Force 1 '07", "Women's Shoes", "US\$115"),
-            Product(R.drawable.shoes1, "Air Jordan XXXVI", "Men's Shoes", "US\$185"),
-            Product(R.drawable.shoes2, "Nike Air Force 1 '07", "Women's Shoes", "US\$115"),
-            Product(R.drawable.shoes1, "Air Jordan XXXVI", "Men's Shoes", "US\$185"),
-            Product(R.drawable.shoes2, "Nike Air Force 1 '07", "Women's Shoes", "US\$115"),  Product(R.drawable.shoes1, "Air Jordan XXXVI", "Men's Shoes", "US\$185"),
-            Product(R.drawable.shoes2, "Nike Air Force 1 '07", "Women's Shoes", "US\$115")
 
-        )
-
-        binding.productRecyclerView.layoutManager = LinearLayoutManager(
-            requireContext(),
-            LinearLayoutManager.HORIZONTAL,
-            false
-        )
-        binding.productRecyclerView.adapter = ProductAdapter(products) { item ->
+        productAdapter = ProductAdapter(emptyList()) { item ->
             val navController = findNavController()
             val navOptions = navOptions {
                 popUpTo(navController.graph.findStartDestination().id) {
@@ -103,10 +104,21 @@ class HomeFragment : Fragment() {
             )
             navController.navigate(action, navOptions)
         }
+
+        binding.productRecyclerView.layoutManager = LinearLayoutManager(
+            requireContext(),
+            LinearLayoutManager.HORIZONTAL,
+            false
+        )
+        binding.productRecyclerView.adapter = productAdapter
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+    }
+
+    companion object {
+        private const val TAG = "HomeFragment"
     }
 }
